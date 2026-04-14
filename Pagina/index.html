@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Diagnostico Medico de Imagenes</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+	<style>
+		:root {
+			--bg-soft: #f2fbf8;
+			--bg-soft-2: #dff2ec;
+			--card: #ffffff;
+			--ink: #15323d;
+			--ink-soft: #4c6570;
+			--brand: #2f9e8f;
+			--brand-strong: #1f7f72;
+			--danger: #cb4f4f;
+			--ok: #2f8f54;
+			--warn: #c58a23;
+			--shadow: 0 20px 45px rgba(10, 66, 67, 0.12);
+			--radius-lg: 20px;
+			--radius-md: 14px;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			font-family: "Source Sans 3", sans-serif;
+			color: var(--ink);
+			background:
+				radial-gradient(circle at 8% 5%, rgba(47, 158, 143, 0.22), transparent 35%),
+				radial-gradient(circle at 92% 95%, rgba(19, 80, 123, 0.15), transparent 28%),
+				linear-gradient(135deg, var(--bg-soft) 0%, var(--bg-soft-2) 100%);
+			min-height: 100vh;
+			animation: fadePage 0.8s ease;
+		}
+
+		@keyframes fadePage {
+			from {
+				opacity: 0;
+				transform: translateY(8px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.shell {
+			max-width: 1120px;
+			margin: 0 auto;
+			padding: 36px 20px 48px;
+		}
+
+		.hero {
+			background: linear-gradient(125deg, #e9f8f5 0%, #f7fffd 50%, #eaf2ff 100%);
+			border-radius: var(--radius-lg);
+			padding: 24px;
+			box-shadow: var(--shadow);
+			border: 1px solid rgba(47, 158, 143, 0.2);
+			margin-bottom: 20px;
+		}
+
+		h1,
+		h2,
+		h3 {
+			font-family: "Lora", serif;
+			margin: 0;
+			letter-spacing: 0.2px;
+		}
+
+		h1 {
+			font-size: clamp(1.5rem, 2vw, 2.2rem);
+			margin-bottom: 10px;
+		}
+
+		.hero p {
+			margin: 0;
+			color: var(--ink-soft);
+			font-size: 1.05rem;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 20px;
+		}
+
+		.card {
+			background: var(--card);
+			border-radius: var(--radius-md);
+			border: 1px solid rgba(21, 50, 61, 0.08);
+			padding: 20px;
+			box-shadow: 0 14px 28px rgba(16, 71, 76, 0.08);
+			opacity: 0;
+			transform: translateY(14px);
+			animation: reveal 0.5s ease forwards;
+		}
+
+		.card:nth-child(2) {
+			animation-delay: 0.1s;
+		}
+
+		@keyframes reveal {
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		.card h2 {
+			font-size: 1.32rem;
+			margin-bottom: 8px;
+		}
+
+		.muted {
+			color: var(--ink-soft);
+			margin: 0 0 14px;
+			line-height: 1.45;
+		}
+
+		.field {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			margin-bottom: 14px;
+		}
+
+		.field label {
+			font-weight: 600;
+		}
+
+		input[type="text"],
+		input[type="password"],
+		input[type="file"] {
+			border: 1px solid #b8d3cd;
+			border-radius: 10px;
+			padding: 10px 12px;
+			font-size: 0.98rem;
+			color: var(--ink);
+			background: #fbfefd;
+		}
+
+		.btn-row {
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+			margin-top: 8px;
+		}
+
+		button {
+			border: 0;
+			border-radius: 999px;
+			padding: 11px 16px;
+			font-weight: 700;
+			font-size: 0.95rem;
+			cursor: pointer;
+			transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+		}
+
+		button:hover {
+			transform: translateY(-2px);
+		}
+
+		.btn-primary {
+			background: linear-gradient(110deg, var(--brand) 0%, var(--brand-strong) 100%);
+			color: #fff;
+			box-shadow: 0 8px 16px rgba(41, 119, 119, 0.26);
+		}
+
+		.btn-secondary {
+			background: #e6f4ef;
+			color: var(--ink);
+		}
+
+		.status {
+			margin-top: 12px;
+			border-radius: 10px;
+			padding: 10px 12px;
+			font-weight: 600;
+			background: #eef8f5;
+			color: var(--ink);
+			min-height: 44px;
+			display: flex;
+			align-items: center;
+		}
+
+		#gallery {
+			display: grid;
+			gap: 12px;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		}
+
+		.preview-item {
+			border: 1px solid #d9ebe6;
+			border-radius: 12px;
+			padding: 10px;
+			background: #fbfffd;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.preview-item img {
+			width: 100%;
+			height: 180px;
+			object-fit: cover;
+			border-radius: 10px;
+			border: 1px solid #bdd9d1;
+		}
+
+		.preview-item strong {
+			display: block;
+			line-break: anywhere;
+		}
+
+		.overlay {
+			position: fixed;
+			inset: 0;
+			background: linear-gradient(150deg, rgba(6, 44, 55, 0.75), rgba(13, 75, 76, 0.55));
+			display: grid;
+			place-items: center;
+			z-index: 999;
+			padding: 20px;
+		}
+
+		.login-card {
+			width: min(460px, 100%);
+			background: #f9fffd;
+			border-radius: 20px;
+			border: 1px solid rgba(255, 255, 255, 0.55);
+			box-shadow: 0 16px 36px rgba(2, 25, 35, 0.32);
+			padding: 24px;
+			animation: reveal 0.4s ease forwards;
+		}
+
+		.login-card h2 {
+			margin-bottom: 10px;
+		}
+
+		.chip {
+			font-size: 0.76rem;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			display: inline-block;
+			background: #d9f2ea;
+			color: #195b53;
+			border-radius: 999px;
+			padding: 4px 10px;
+			margin-bottom: 12px;
+			font-weight: 700;
+		}
+
+		.hidden {
+			display: none;
+		}
+
+		@media (max-width: 920px) {
+			.grid {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="overlay" id="loginOverlay">
+		<section class="login-card">
+			<span class="chip">Acceso Clinico</span>
+			<h2>Inicio de sesion</h2>
+			<p class="muted">
+				Ingresa con nombre y contrasena. Por ahora no hay validacion de usuario especifico.
+			</p>
+			<div class="field">
+				<label for="loginName">Nombre del profesional</label>
+				<input id="loginName" type="text" placeholder="Ejemplo: Dra. Martinez" />
+			</div>
+			<div class="field">
+				<label for="loginPassword">Contrasena</label>
+				<input id="loginPassword" type="password" placeholder="Escribe tu contrasena" />
+			</div>
+			<div class="btn-row">
+				<button class="btn-primary" id="btnLogin">Entrar</button>
+			</div>
+		</section>
+	</div>
+
+	<main class="shell">
+		<section class="hero">
+			<h1>Carga de Imagenes Medicas</h1>
+			<p>
+				Sube una o varias imagenes diagnosticas para visualizarlas en el panel clinico.
+			</p>
+		</section>
+
+		<section class="grid">
+			<article class="card">
+				<h2>Subir imagenes</h2>
+				<p class="muted">Selecciona una o varias imagenes para visualizarlas.</p>
+				<div class="field">
+					<label for="imageFiles">Imagenes diagnosticas</label>
+					<input id="imageFiles" type="file" accept="image/*" multiple />
+				</div>
+				<div class="btn-row">
+					<button class="btn-primary" id="btnPreview">Mostrar imagenes</button>
+					<button class="btn-secondary" id="btnClear">Limpiar resultados</button>
+				</div>
+				<div class="status" id="uploadStatus">Esperando imagenes.</div>
+				<div id="gallery"></div>
+			</article>
+		</section>
+	</main>
+
+	<script>
+		const loginOverlay = document.getElementById("loginOverlay");
+		const loginName = document.getElementById("loginName");
+		const loginPassword = document.getElementById("loginPassword");
+		const btnLogin = document.getElementById("btnLogin");
+
+		const imageFilesInput = document.getElementById("imageFiles");
+		const btnPreview = document.getElementById("btnPreview");
+		const btnClear = document.getElementById("btnClear");
+
+		const uploadStatus = document.getElementById("uploadStatus");
+		const gallery = document.getElementById("gallery");
+
+		function setStatus(el, msg, type = "") {
+			el.textContent = msg;
+			el.className = `status ${type}`.trim();
+		}
+
+		function closeLogin(userName, password) {
+			const cleanUser = userName ? userName.trim() : "";
+			const cleanPass = password ? password.trim() : "";
+
+			if (!cleanUser || !cleanPass) {
+				alert("Completa nombre y contrasena para ingresar.");
+				return;
+			}
+
+			loginOverlay.classList.add("hidden");
+			setStatus(uploadStatus, `Sesion activa: ${cleanUser}. Puedes subir imagenes.`);
+		}
+
+		btnLogin.addEventListener("click", () => closeLogin(loginName.value, loginPassword.value));
+
+		function fileToImage(file) {
+			return new Promise((resolve, reject) => {
+				const img = new Image();
+				const reader = new FileReader();
+				reader.onload = (event) => {
+					img.src = event.target.result;
+				};
+				reader.onerror = () => reject(new Error("No se pudo leer la imagen."));
+				img.onload = () => resolve({ img, preview: img.src });
+				img.onerror = () => reject(new Error("El archivo no es una imagen valida."));
+				reader.readAsDataURL(file);
+			});
+		}
+
+		function createPreviewCard(fileName, preview) {
+			const item = document.createElement("article");
+			item.className = "preview-item";
+			item.innerHTML = `
+				<img src="${preview}" alt="${fileName}" />
+				<strong>${fileName}</strong>
+			`;
+			return item;
+		}
+
+		async function showImages() {
+			const files = Array.from(imageFilesInput.files || []);
+			if (!files.length) {
+				setStatus(uploadStatus, "Sube al menos una imagen.", "error");
+				return;
+			}
+
+			gallery.innerHTML = "";
+			setStatus(uploadStatus, "Cargando vistas previas...");
+
+			for (const file of files) {
+				try {
+					const { img, preview } = await fileToImage(file);
+					if (img) {
+						gallery.appendChild(createPreviewCard(file.name, preview));
+					}
+				} catch (error) {
+					const item = document.createElement("article");
+					item.className = "preview-item";
+					item.innerHTML = `
+						<div style="height:180px;border-radius:10px;background:#fee;display:grid;place-items:center;">Error</div>
+						<strong>${file.name}</strong>
+						<div>No se pudo cargar esta imagen.</div>
+					`;
+					gallery.appendChild(item);
+				}
+			}
+			setStatus(uploadStatus, `Se cargaron ${files.length} imagen(es).`, "ok");
+		}
+
+		function clearResults() {
+			imageFilesInput.value = "";
+			gallery.innerHTML = "";
+			setStatus(uploadStatus, "Resultados limpiados. Puedes cargar nuevas imagenes.");
+		}
+
+		btnPreview.addEventListener("click", showImages);
+		btnClear.addEventListener("click", clearResults);
+	</script>
+</body>
+</html>
