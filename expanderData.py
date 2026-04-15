@@ -30,7 +30,7 @@ def guardar_imagen(img, ruta):
 
 # PROCESAR DATASET
 def expandir_dataset():
-    clases = ["sano", "enfermo"]
+    clases = ["no_cancer", "cancer"]
 
     for clase in clases:
         ruta_clase = os.path.join(input_dir, clase)
