@@ -190,6 +190,21 @@
 			align-items: center;
 		}
 
+		.status.ok {
+			background: #eaf8ef;
+			color: var(--ok);
+		}
+
+		.status.error {
+			background: #fdeeee;
+			color: var(--danger);
+		}
+
+		.status.warn {
+			background: #fff7e8;
+			color: var(--warn);
+		}
+
 		#gallery {
 			display: grid;
 			gap: 12px;
@@ -217,6 +232,36 @@
 		.preview-item strong {
 			display: block;
 			line-break: anywhere;
+		}
+
+		.result-pill {
+			display: inline-flex;
+			align-items: center;
+			padding: 6px 10px;
+			border-radius: 999px;
+			font-size: 0.86rem;
+			font-weight: 700;
+			width: fit-content;
+		}
+
+		.result-pill.pending {
+			background: #edf4f2;
+			color: #32545a;
+		}
+
+		.result-pill.cancer {
+			background: #fdeaea;
+			color: #b73c3c;
+		}
+
+		.result-pill.no-cancer {
+			background: #e8f6ee;
+			color: #1e8050;
+		}
+
+		.result-pill.error {
+			background: #fff2f2;
+			color: #a94444;
 		}
 
 		.overlay {
@@ -307,6 +352,7 @@
 				</div>
 				<div class="btn-row">
 					<button class="btn-primary" id="btnPreview">Mostrar imagenes</button>
+					<button class="btn-primary" id="btnAnalyze">Analizar con modelo</button>
 					<button class="btn-secondary" id="btnClear">Limpiar resultados</button>
 				</div>
 				<div class="status" id="uploadStatus">Esperando imagenes.</div>
@@ -323,10 +369,14 @@
 
 		const imageFilesInput = document.getElementById("imageFiles");
 		const btnPreview = document.getElementById("btnPreview");
+		const btnAnalyze = document.getElementById("btnAnalyze");
 		const btnClear = document.getElementById("btnClear");
 
 		const uploadStatus = document.getElementById("uploadStatus");
 		const gallery = document.getElementById("gallery");
+		const API_PREDICT_URL = "/api/predict";
+
+		let previewState = [];
 
 		function setStatus(el, msg, type = "") {
 			el.textContent = msg;
@@ -368,8 +418,32 @@
 			item.innerHTML = `
 				<img src="${preview}" alt="${fileName}" />
 				<strong>${fileName}</strong>
+				<div class="result-pill pending">Pendiente de analisis</div>
 			`;
 			return item;
+		}
+
+		async function predictWithBackend(file) {
+			const body = new FormData();
+			body.append("image", file);
+
+			const response = await fetch(API_PREDICT_URL, {
+				method: "POST",
+				body,
+			});
+
+			if (!response.ok) {
+				let detail = "No se pudo obtener prediccion.";
+				try {
+					const errorData = await response.json();
+					detail = errorData.error || detail;
+				} catch (_) {
+					// Ignorar parseo de error JSON
+				}
+				throw new Error(detail);
+			}
+
+			return response.json();
 		}
 
 		async function showImages() {
@@ -380,13 +454,16 @@
 			}
 
 			gallery.innerHTML = "";
+			previewState = [];
 			setStatus(uploadStatus, "Cargando vistas previas...");
 
 			for (const file of files) {
 				try {
 					const { img, preview } = await fileToImage(file);
 					if (img) {
-						gallery.appendChild(createPreviewCard(file.name, preview));
+						const card = createPreviewCard(file.name, preview);
+						gallery.appendChild(card);
+						previewState.push({ file, card });
 					}
 				} catch (error) {
 					const item = document.createElement("article");
@@ -402,13 +479,59 @@
 			setStatus(uploadStatus, `Se cargaron ${files.length} imagen(es).`, "ok");
 		}
 
+		async function analyzeImages() {
+			if (!previewState.length) {
+				setStatus(uploadStatus, "Primero muestra las imagenes antes de analizarlas.", "warn");
+				return;
+			}
+
+			setStatus(uploadStatus, "Analizando imagenes con el modelo...", "warn");
+
+			let okCount = 0;
+			let failCount = 0;
+
+			for (const item of previewState) {
+				const pill = item.card.querySelector(".result-pill");
+				pill.textContent = "Analizando...";
+				pill.className = "result-pill pending";
+
+				try {
+					const result = await predictWithBackend(item.file);
+					const label = (result.label || "").toLowerCase();
+					const confidence = Number(result.confidence || 0);
+					const confidencePct = `${(confidence * 100).toFixed(1)}%`;
+
+					if (label === "cancer") {
+						pill.className = "result-pill cancer";
+						pill.textContent = `Resultado: Cancer (${confidencePct})`;
+					} else {
+						pill.className = "result-pill no-cancer";
+						pill.textContent = `Resultado: No cancer (${confidencePct})`;
+					}
+					okCount += 1;
+				} catch (error) {
+					pill.className = "result-pill error";
+					pill.textContent = "Error de analisis";
+					failCount += 1;
+				}
+			}
+
+			if (failCount === 0) {
+				setStatus(uploadStatus, `Analisis completado: ${okCount} imagen(es).`, "ok");
+			} else {
+				setStatus(uploadStatus, `Analisis parcial: ${okCount} correctas y ${failCount} con error.`, "warn");
+			}
+		}
+
 		function clearResults() {
 			imageFilesInput.value = "";
 			gallery.innerHTML = "";
+			previewState = [];
 			setStatus(uploadStatus, "Resultados limpiados. Puedes cargar nuevas imagenes.");
 		}
 
 		btnPreview.addEventListener("click", showImages);
+		btnAnalyze.addEventListener("click", analyzeImages);
 		btnClear.addEventListener("click", clearResults);
 	</script>
 </body>
