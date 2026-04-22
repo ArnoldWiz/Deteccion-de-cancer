@@ -1,3 +1,5 @@
 .venv
 ResNet50_binario.keras
 ResNet101_binario.keras
+mejor_cnn_personalizada.keras
+CNN_personalizada_binaria.keras

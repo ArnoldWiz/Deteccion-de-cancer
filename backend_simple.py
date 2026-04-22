@@ -44,12 +44,9 @@ def decode_prediction(raw_pred: np.ndarray) -> Dict[str, float]:
     raw_pred = np.array(raw_pred)
 
     if raw_pred.ndim == 2 and raw_pred.shape[1] == 1:
-        # En binario con sigmoide, normalmente la salida representa probabilidad de la clase 1.
-        # Ajustado al orden actual: clase 0 = no_cancer, clase 1 = cancer.
         p_cancer = float(raw_pred[0, 0])
         p_no_cancer = 1.0 - p_cancer
     elif raw_pred.ndim == 2 and raw_pred.shape[1] >= 2:
-        # Modelo con 2 neuronas (softmax o logits)
         probs = raw_pred[0].astype(np.float64)
         probs_sum = probs.sum()
         probs_valid = np.all(probs >= 0.0) and np.all(probs <= 1.0) and abs(probs_sum - 1.0) < 1e-3

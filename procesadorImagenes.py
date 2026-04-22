@@ -2,11 +2,9 @@ import cv2
 import os
 from tqdm import tqdm
 
-# RUTAS
 input_dir = "dataset_original"
 output_dir = "dataset_procesado"
 
-# PARÁMETROS
 IMG_SIZE = 224
 GAUSSIAN_KERNEL = (5, 5)
 CLAHE_CLIP = 2.0
@@ -35,7 +33,7 @@ def procesar_imagen(ruta):
     # 4. CLAHE (mejorar contraste)
     img = clahe.apply(img)
 
-    # 5. Normalización (0–255 → 0–1 → 0–255 otra vez para guardar)
+    # 5. Normalización 
     img = img / 255.0
     img = (img * 255).astype("uint8")
 
