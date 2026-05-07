@@ -12,7 +12,10 @@ MODEL_PATH = os.path.join(BASE_DIR, "ResNet101_binario.keras")
 FRONTEND_DIR = os.path.join(BASE_DIR, "Pagina")
 
 IMG_SIZE: Tuple[int, int] = (224, 224)
-CLASS_NAMES = ["no_cancer", "cancer"]
+CLASS_NAMES = ["cancer", "no_cancer"]
+# Para modelos con salida Dense(1, sigmoid), Keras suele usar etiqueta 1 para la
+# segunda clase en orden alfabetico (normalmente "no_cancer").
+SIGMOID_POSITIVE_CLASS = "no_cancer"
 
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)
@@ -44,8 +47,15 @@ def decode_prediction(raw_pred: np.ndarray) -> Dict[str, float]:
     raw_pred = np.array(raw_pred)
 
     if raw_pred.ndim == 2 and raw_pred.shape[1] == 1:
-        p_cancer = float(raw_pred[0, 0])
-        p_no_cancer = 1.0 - p_cancer
+        p_pos = float(np.clip(raw_pred[0, 0], 0.0, 1.0))
+        if SIGMOID_POSITIVE_CLASS not in CLASS_NAMES:
+            raise ValueError("SIGMOID_POSITIVE_CLASS no existe en CLASS_NAMES.")
+
+        negative_class = next(name for name in CLASS_NAMES if name != SIGMOID_POSITIVE_CLASS)
+        probabilities = {
+            SIGMOID_POSITIVE_CLASS: p_pos,
+            negative_class: 1.0 - p_pos,
+        }
     elif raw_pred.ndim == 2 and raw_pred.shape[1] >= 2:
         probs = raw_pred[0].astype(np.float64)
         probs_sum = probs.sum()
@@ -54,19 +64,20 @@ def decode_prediction(raw_pred: np.ndarray) -> Dict[str, float]:
         if not probs_valid:
             probs = tf.nn.softmax(probs).numpy()
 
-        p_cancer = float(probs[0])
-        p_no_cancer = float(probs[1])
+        if probs.shape[0] < len(CLASS_NAMES):
+            raise ValueError("La salida del modelo tiene menos clases que CLASS_NAMES.")
+
+        probabilities = {name: float(probs[idx]) for idx, name in enumerate(CLASS_NAMES)}
     else:
         raise ValueError("Forma de salida del modelo no soportada.")
 
-    label = "cancer" if p_cancer >= p_no_cancer else "no_cancer"
-    confidence = max(p_cancer, p_no_cancer)
+    label = max(probabilities, key=probabilities.get)
+    confidence = probabilities[label]
 
     return {
         "label": label,
         "confidence": confidence,
-        "prob_cancer": p_cancer,
-        "prob_no_cancer": p_no_cancer,
+        "probabilities": probabilities,
     }
 
 
@@ -103,10 +114,7 @@ def predict():
             {
                 "label": decoded["label"],
                 "confidence": decoded["confidence"],
-                "probabilities": {
-                    CLASS_NAMES[0]: decoded["prob_no_cancer"],
-                    CLASS_NAMES[1]: decoded["prob_cancer"],
-                },
+                "probabilities": decoded["probabilities"],
             }
         )
     except Exception as exc:
