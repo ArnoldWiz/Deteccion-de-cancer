@@ -5,7 +5,7 @@ Requiere:
     pip install ultralytics opencv-python
 
 Uso:
-    python detectar_persona.py --model ../../runs/detect/train-5/weights/best.pt
+    python detectar_persona.py --model runs/detect/train-5/weights/best.pt
 
 Controles:
     - q: salir
@@ -22,7 +22,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Detección en vivo con YOLO")
     parser.add_argument(
         "--model",
-        default=r"..\..\runs\detect\train-5\weights\best.pt",
+        default=str(Path(__file__).resolve().parents[2] / "runs" / "detect" / "train-5" / "weights" / "best.pt"),
         help="Ruta al modelo entrenado best.pt",
     )
     parser.add_argument("--camera", type=int, default=0, help="Índice de la cámara")
@@ -61,7 +61,7 @@ def main():
                 for box in result.boxes:
                     cls_id = int(box.cls[0])
                     conf = float(box.conf[0])
-                    if cls_id == 0:
+                    if cls_id in (0, 1):
                         detected_persona = True
 
                     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
