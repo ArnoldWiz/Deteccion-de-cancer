@@ -1,0 +1,9 @@
+path: dataset_yolo
+train: images/train
+val: images/val
+test: images/test
+
+nc: 2
+names:
+  0: ArnoldWiz
+  1: AletsKiller
